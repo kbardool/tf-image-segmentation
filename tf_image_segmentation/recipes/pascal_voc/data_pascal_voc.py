@@ -25,9 +25,13 @@ from collections import defaultdict
 import os
 from keras.utils import get_file
 # from tf_image_segmentation.recipes import datasets
+import tarfile
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+sys.path.insert(0,"E:\\git_projs\\tf-image-segmentation")
+pp.pprint(sys.path)
 from tf_image_segmentation.utils.tf_records import write_image_annotation_pairs_to_tfrecord
 from tf_image_segmentation.utils import pascal_voc
-import tarfile
 
 # ============== Ingredient 2: dataset =======================
 data_pascal_voc = Experiment("dataset")
@@ -37,8 +41,9 @@ data_pascal_voc = Experiment("dataset")
 def voc_config():
     # TODO(ahundt) add md5 sums for each file
     verbose = True
-    dataset_root = os.path.expanduser("~") + "/.keras/datasets"
-    dataset_path = dataset_root + '/VOC2012'
+    # dataset_root = os.path.expanduser("~") + "/.keras/datasets"
+    dataset_root = "E:/MLdatasets"
+    dataset_path = dataset_root + '/FCN'
     # sys.path.append("tf-image-segmentation/")
     # os.environ["CUDA_VISIBLE_DEVICES"] = '1'
     # based on https://github.com/martinkersner/train-DeepLab
@@ -54,16 +59,19 @@ def voc_config():
     # http://www.cs.stanford.edu/~roozbeh/pascal-context/
     # http://www.cs.stanford.edu/~roozbeh/pascal-context/trainval.tar.gz
     pascal_berkeley_root = dataset_path + '/benchmark_RELEASE'
+    
     urls = [
-        'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
-        'http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz',
+        # 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
+        # 'http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz',
         'http://www.cs.stanford.edu/~roozbeh/pascal-context/trainval.tar.gz',
         'http://www.cs.stanford.edu/~roozbeh/pascal-context/33_context_labels.tar.gz',
         'http://www.cs.stanford.edu/~roozbeh/pascal-context/59_context_labels.tar.gz',
         'http://www.cs.stanford.edu/~roozbeh/pascal-context/33_labels.txt',
         'http://www.cs.stanford.edu/~roozbeh/pascal-context/59_labels.txt'
     ]
-    filenames = ['VOCtrainval_11-May-2012.tar',
+    
+    filenames = [
+                 'VOCtrainval_11-May-2012.tar',
                  'benchmark.tgz',
                  'trainval.tar.gz',
                  '33_context_labels.tar.gz',
@@ -72,7 +80,8 @@ def voc_config():
                  '59_labels.txt'
                  ]
 
-    md5s = ['6cd6e144f989b92b3379bac3b3de84fd',
+    md5s = [
+            '6cd6e144f989b92b3379bac3b3de84fd',
             '82b4d87ceb2ed10f6038a1cba92111cb',
             'df034edb2c12aa7d33b42b20bb1796e3',
             '180101cfc01c71867b6686207f071eb9',
@@ -81,8 +90,8 @@ def voc_config():
             '993901f2d930cc038c406845f08fa082']
 
     combined_imageset_train_txt = dataset_path + '/combined_imageset_train.txt'
-    combined_imageset_val_txt = dataset_path + '/combined_imageset_val.txt'
-    combined_annotations_path = dataset_path + '/combined_annotations'
+    combined_imageset_val_txt   = dataset_path + '/combined_imageset_val.txt'
+    combined_annotations_path   = dataset_path + '/combined_annotations'
 
     # see get_augmented_pascal_image_annotation_filename_pairs()
     voc_data_subset_mode = 2
@@ -90,20 +99,29 @@ def voc_config():
 
 @data_pascal_voc.capture
 def pascal_voc_files(dataset_path, filenames, dataset_root, urls, md5s):
-    print(dataset_path)
-    print(dataset_root)
-    print(urls)
-    print(filenames)
-    print(md5s)
+    print('dataset_path  -----------------------------')
+    pp.pprint(dataset_path)
+    print('dataset_root  -----------------------------')
+    pp.pprint(dataset_root)
+    print('urls      -----------------------------')
+    pp.pprint(urls)
+    print('filenames -----------------------------')
+    pp.pprint(filenames)
+    # pp.pprint(md5s)
     return [dataset_path + filename for filename in filenames]
 
 
+        
 @data_pascal_voc.command
 def pascal_voc_download(dataset_path, filenames, dataset_root, urls, md5s):
-    zip_paths = pascal_voc_files(dataset_path, filenames, dataset_root, urls, md5s)
-    for url, filename, md5 in zip(urls, filenames, md5s):
-        path = get_file(filename, url, md5_hash=md5, extract=True, cache_subdir=dataset_path)
 
+    zip_paths = pascal_voc_files(dataset_path, filenames, dataset_root, urls, md5s)
+    print(' zip_paths  -----------------------------')
+    pp.pprint(zip_paths)
+    
+    for url, filename, md5 in zip(urls, filenames, md5s):
+        print('downloading {} from {} to {} '.format(filename, url, dataset_path))
+        path = get_file(filename, url, md5_hash=md5, extract=True, cache_subdir=dataset_path)
 
 
 @data_pascal_voc.command
@@ -125,6 +143,7 @@ def pascal_voc_berkeley_combined(dataset_path,
                                  combined_imageset_train_txt,
                                  combined_imageset_val_txt,
                                  combined_annotations_path):
+    print(' Entered pascal_voc_berkely_combined ---')                                 
     # Returns a list of (image, annotation)
     # filename pairs (filename.jpg, filename.png)
     overall_train_image_annotation_filename_pairs, \
@@ -157,6 +176,7 @@ def pascal_voc_segmentation_to_tfrecord(dataset_path,
                                         voc_data_subset_mode,
                                         tfrecords_train_filename,
                                         tfrecords_val_filename):
+    print(' pascal_voc_segmentation_to_tfrecord  ---')                                   
     # Returns a list of (image, annotation)
     # filename pairs (filename.jpg, filename.png)
     overall_train_image_annotation_filename_pairs, \
@@ -190,12 +210,14 @@ def pascal_voc_setup(filenames, dataset_path, pascal_root,
                      combined_imageset_train_txt,
                      combined_imageset_val_txt,
                      combined_annotations_path):
-    # download the dataset
-    pascal_voc_download(dataset_path, filenames,
-                        dataset_root, urls, md5s)
-    # convert the relevant files to a more useful format
-    convert_pascal_berkeley_augmented_mat_annotations_to_png(
-        pascal_berkeley_root)
+    print(' Pascal VOC setup routiune ---')                                   
+    # 1- download the dataset
+    pascal_voc_download(dataset_path, filenames, dataset_root, urls, md5s)
+    
+    # 2- convert the relevant files to a more useful format
+    convert_pascal_berkeley_augmented_mat_annotations_to_png(pascal_berkeley_root)
+    
+    # 3- 
     pascal_voc_berkeley_combined(dataset_path,
                                  pascal_root,
                                  pascal_berkeley_root,
@@ -203,6 +225,7 @@ def pascal_voc_setup(filenames, dataset_path, pascal_root,
                                  combined_imageset_train_txt,
                                  combined_imageset_val_txt,
                                  combined_annotations_path)
+    # 4-                              
     pascal_voc_segmentation_to_tfrecord(dataset_path, pascal_root,
                                         pascal_berkeley_root,
                                         voc_data_subset_mode,
@@ -220,7 +243,10 @@ def main(filenames, dataset_path, pascal_root,
          combined_imageset_train_txt,
          combined_imageset_val_txt,
          combined_annotations_path):
+
+    
     voc_config()
+
     pascal_voc_setup(filenames, dataset_path, pascal_root,
                      pascal_berkeley_root, dataset_root,
                      voc_data_subset_mode,

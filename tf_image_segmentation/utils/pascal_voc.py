@@ -257,7 +257,9 @@ def convert_pascal_berkeley_augmented_mat_annotations_to_png(pascal_berkeley_aug
         mat = scipy.io.loadmat(mat_filename, mat_dtype=True, squeeze_me=True, struct_as_record=False)
         return mat[key].Segmentation
 
-
+    # mat file folder is E:\MLDatasets\FCN\benchmark_RELEASE\dataset\cls
+    # png file folder is E:\MLDatasets\FCN\benchmark_RELEASE\dataset\cls_png
+    
     mat_file_extension_string = '.mat'
     png_file_extension_string = '.png'
     relative_path_to_annotation_mat_files = 'dataset/cls'
@@ -275,21 +277,19 @@ def convert_pascal_berkeley_augmented_mat_annotations_to_png(pascal_berkeley_aug
     # Create the folder where all the converted png files will be placed
     # If the folder already exists, do nothing
     if not os.path.exists(annotation_png_save_fullpath):
-
         os.makedirs(annotation_png_save_fullpath)
     else:
-
+        print(' utils.Mat to png conversion:  Folder ', annotation_png_save_fullpath,' already exists!!' )
         return
 
 
     mat_files_names = os.listdir(annotation_mat_files_fullpath)
-
+    print(' utils.Mat to png conversion: ',len(mat_files_names),' to be converted to png files')
+    
     for current_mat_file_name in mat_files_names:
-
         current_file_name_without_extention = current_mat_file_name[:-mat_file_extension_string_length]
 
-        current_mat_file_full_path = os.path.join(annotation_mat_files_fullpath,
-                                                  current_mat_file_name)
+        current_mat_file_full_path = os.path.join(annotation_mat_files_fullpath, current_mat_file_name)
 
         current_png_file_full_path_to_be_saved = os.path.join(annotation_png_save_fullpath,
                                                               current_file_name_without_extention)
@@ -519,6 +519,7 @@ def get_augmented_pascal_image_annotation_filename_pairs(pascal_root, pascal_ber
     image_annotation_pairs : [[(string, string), .. , (string, string)][(string, string), .., (string, string)]]
         Array with filename pairs with fullnames.
     """
+    print('get_augmented_pascal_image_annotation_filename_pairs ---')
     pascal_txts = get_pascal_segmentation_images_lists_txts(pascal_root=pascal_root)
     berkeley_txts = get_pascal_berkeley_augmented_segmentation_images_lists_txts(pascal_berkeley_root=pascal_berkeley_root)
 
@@ -567,11 +568,10 @@ def get_augmented_pascal_image_annotation_filename_pairs(pascal_root, pascal_ber
                                                          list(train_from_pascal))
 
     overall_train_image_annotation_filename_pairs = \
-    train_from_berkeley_image_annotation_pairs + train_from_pascal_image_annotation_pairs
+    list(train_from_berkeley_image_annotation_pairs) + list(train_from_pascal_image_annotation_pairs)
 
     overall_val_image_annotation_filename_pairs = \
-    get_pascal_selected_image_annotation_filenames_pairs(pascal_root,
-                                                         validation)
+    list(get_pascal_selected_image_annotation_filenames_pairs(pascal_root, validation))
 
     return overall_train_image_annotation_filename_pairs, overall_val_image_annotation_filename_pairs
 
